@@ -42,6 +42,7 @@ frontend/dist/
 frontend/.vite/
 
 # ===== 敏感配置（本地覆盖文件）=====
+backend/src/main/resources/application.yml
 backend/src/main/resources/application-local.yml
 backend/src/main/resources/application-prod.yml
 
