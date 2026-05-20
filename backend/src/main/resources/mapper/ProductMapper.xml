@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.select.product.mapper.ProductMapper">
+
+    <select id="selectRankingList" resultType="com.select.product.entity.Product">
+        SELECT * FROM product
+        <where>
+            deleted = 0
+            <if test="dto.keyword != null and dto.keyword != ''">
+                AND title LIKE CONCAT('%', #{dto.keyword}, '%')
+            </if>
+            <if test="dto.platform != null and dto.platform != ''">
+                AND platform = #{dto.platform}
+            </if>
+            <if test="dto.category != null and dto.category != ''">
+                AND category = #{dto.category}
+            </if>
+            <if test="dto.minPrice != null">
+                AND price &gt;= #{dto.minPrice}
+            </if>
+            <if test="dto.maxPrice != null">
+                AND price &lt;= #{dto.maxPrice}
+            </if>
+            <if test="dto.minRating != null">
+                AND rating &gt;= #{dto.minRating}
+            </if>
+            <if test="dto.startDate != null">
+                AND collect_date &gt;= #{dto.startDate}
+            </if>
+            <if test="dto.endDate != null">
+                AND collect_date &lt;= #{dto.endDate}
+            </if>
+            <if test="dto.verdict != null and dto.verdict != ''">
+                AND verdict = #{dto.verdict}
+            </if>
+        </where>
+        <choose>
+            <when test="dto.sortField == 'sales'">
+                ORDER BY sales <if test="dto.sortOrder == 'asc'">ASC</if><if test="dto.sortOrder != 'asc'">DESC</if>
+            </when>
+            <when test="dto.sortField == 'rating'">
+                ORDER BY rating <if test="dto.sortOrder == 'asc'">ASC</if><if test="dto.sortOrder != 'asc'">DESC</if>
+            </when>
+            <when test="dto.sortField == 'aiScore'">
+                ORDER BY ai_score <if test="dto.sortOrder == 'asc'">ASC</if><if test="dto.sortOrder != 'asc'">DESC</if>
+            </when>
+            <otherwise>
+                ORDER BY create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectTopByAiScore" resultType="com.select.product.entity.Product">
+        SELECT * FROM product
+        WHERE deleted = 0 AND ai_score IS NOT NULL
+        <if test="platform != null and platform != ''">
+            AND platform = #{platform}
+        </if>
+        ORDER BY ai_score DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectDistinctCategories" resultType="java.lang.String">
+        SELECT DISTINCT category FROM product WHERE deleted = 0 AND category IS NOT NULL ORDER BY category
+    </select>
+
+    <select id="selectDailyCollectCount" resultType="java.util.Map">
+        SELECT
+            DATE(collect_time) AS collectDate,
+            COUNT(id) AS count
+        FROM product
+        WHERE deleted = 0
+          AND collect_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+        GROUP BY DATE(collect_time)
+        ORDER BY collectDate ASC
+    </select>
+
+    <select id="selectTodayCollectCount" resultType="java.lang.Long">
+        SELECT COUNT(id) FROM product
+        WHERE deleted = 0 AND collect_date = CURDATE()
+    </select>
+
+    <select id="selectVerdictDistribution" resultType="java.util.Map">
+        SELECT
+            IFNULL(verdict, '未分析') AS verdict,
+            COUNT(id) AS count
+        FROM product
+        WHERE deleted = 0
+        GROUP BY verdict
+    </select>
+
+    <select id="selectCategoryTrend" resultType="com.select.product.dto.CategoryTrendVO">
+        SELECT
+            p.category,
+            DATE(p.create_time) AS statDate,
+            COUNT(p.id)         AS productCount,
+            AVG(p.ai_score)     AS avgAiScore,
+            AVG(p.sales)        AS avgSales
+        FROM product p
+        WHERE p.deleted = 0
+          AND p.category IS NOT NULL
+          AND p.create_time >= DATE_SUB(CURDATE(), INTERVAL #{days} DAY)
+          <if test="category != null and category != ''">
+              AND p.category = #{category}
+          </if>
+        GROUP BY p.category, DATE(p.create_time)
+        ORDER BY statDate ASC
+    </select>
+
+</mapper>
+

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.select.product.mapper.DailyStatsMapper">
+
+    <select id="selectTrendByProductId" resultType="com.select.product.entity.DailyStats">
+        SELECT * FROM daily_stats
+        WHERE product_id = #{dto.productId}
+        <if test="dto.startDate != null">
+            AND stat_date &gt;= #{dto.startDate}
+        </if>
+        <if test="dto.endDate != null">
+            AND stat_date &lt;= #{dto.endDate}
+        </if>
+        ORDER BY stat_date ASC
+    </select>
+
+    <insert id="batchInsert">
+        INSERT INTO daily_stats (product_id, stat_date, sales, views, rating, rank, price_change, create_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.productId}, #{item.statDate}, #{item.sales}, #{item.views},
+             #{item.rating}, #{item.rank}, #{item.priceChange}, NOW())
+        </foreach>
+    </insert>
+
+</mapper>
+

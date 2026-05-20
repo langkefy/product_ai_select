@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.select.product.mapper.CollectTaskMapper">
+
+    <select id="selectByStatus" resultType="com.select.product.entity.CollectTask">
+        SELECT * FROM collect_task WHERE status = #{status} ORDER BY create_time DESC
+    </select>
+
+    <select id="selectPendingTasks" resultType="com.select.product.entity.CollectTask">
+        SELECT * FROM collect_task WHERE status = 'PENDING' ORDER BY create_time ASC
+    </select>
+
+    <!-- 查询卡死任务：RUNNING 且 start_time 早于指定时间点 -->
+    <select id="selectStuckTasks" resultType="com.select.product.entity.CollectTask">
+        SELECT * FROM collect_task
+        WHERE status = 'RUNNING'
+          AND start_time IS NOT NULL
+          AND start_time &lt; #{deadline}
+    </select>
+
+</mapper>
+
